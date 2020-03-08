@@ -1,0 +1,157 @@
+from Tkinter import *
+import socketio
+import emoji
+master = Tk()
+
+sio = socketio.Client()
+sio.connect('http://localhost:3005')
+
+@sio.on('connect')
+def connect_handler():
+    print('Connected!')
+
+@sio.on('myMessage')
+def myMessage(data):
+    print('message recvieved')
+
+@sio.on('addReaction')
+def addReaction(data):
+    print("got Reaction to add")
+    master.arrayOfCounts[data] += 1
+    oldText = master.arrayOfTextVars[data].get()        
+    oldText = oldText[:-len(str(master.arrayOfCounts[data] - 1))]
+    newText = oldText + str(master.arrayOfCounts[data])
+    master.arrayOfTextVars[data].set(newText)
+    
+    master.arrayOfLabels[data].config(font=("Arial", 12 + master.arrayOfCounts[data]))
+    
+    
+#variable is stored in the master object
+master.counter = 0
+master.arrayOfTextVars = []
+master.arrayOfCounts = [0,0,0,0,0,0,0,0,0]
+master.arrayOfNames = ["confused", "thumbs up", "happy","quizsitize","another","thing","help","idea","idea #2"]
+for x in range(9):
+    master.arrayOfTextVars.append(StringVar())
+for x in range(9):
+    master.arrayOfTextVars[x].set(master.arrayOfNames[x] + ": 0")
+
+master.arrayOfLabels= [Label(master, textvariable=master.arrayOfTextVars[0]),
+Label(master, textvariable=master.arrayOfTextVars[1]),
+Label(master, textvariable=master.arrayOfTextVars[2]),
+Label(master, textvariable=master.arrayOfTextVars[3]),
+Label(master, textvariable=master.arrayOfTextVars[4]),
+Label(master, textvariable=master.arrayOfTextVars[5]),
+Label(master, textvariable=master.arrayOfTextVars[6]),
+Label(master, textvariable=master.arrayOfTextVars[7]),
+Label(master, textvariable=master.arrayOfTextVars[8])]
+
+# master.c0.config(font=("Arial", 12 + master.arrayOfCounts[0]))
+
+
+
+#print(emoji.emojize(":grinning_face_with_big_eyes:"))
+
+def forgetAll():
+    e1.grid_forget()
+    b1.grid_forget()
+    l1.grid_forget()
+    e2.grid_forget()
+    b2.grid_forget()
+    l2.grid_forget()
+
+def clickedCreateRoom():
+    print('create was clicked with entry: ' + e1.get())
+    sio.emit('createRoom', e1.get())
+    forgetAll()
+    createEmojiGrid()
+    createCountGrid()
+
+def clickedJoinRoom():
+    print('join was clicked with entry: ' + e2.get())
+    sio.emit('joinRoom', e2.get())
+    forgetAll()
+    createEmojiGrid()
+    createCountGrid()
+
+def createEmojiGrid():
+    b2 = Button(master, text="confused", command=lambda: emojiClicked(0))
+    b2.grid(row=0,column=0)    
+    b3 = Button(master, text="thumbs up", command=lambda: emojiClicked(1))
+    b3.grid(row=0,column=1)
+    b4 = Button(master, text="happy", command=lambda: emojiClicked(2))
+    b4.grid(row=0,column=2)
+    b5 = Button(master, text="quizsitive", command=lambda: emojiClicked(3))
+    b5.grid(row=1,column=0)
+    b6 = Button(master, text="another", command=lambda: emojiClicked(4))
+    b6.grid(row=1,column=1)
+    b7 = Button(master, text="thing", command=lambda: emojiClicked(5))
+    b7.grid(row=1,column=2)
+    b8 = Button(master, text="help", command=lambda: emojiClicked(6))
+    b8.grid(row=2,column=0)
+    b9 = Button(master, text="idea", command=lambda: emojiClicked(7))
+    b9.grid(row=2,column=1)
+    b0 = Button(master, text="idea #2", command=lambda: emojiClicked(8))
+    b0.grid(row=2,column=2)
+master.countVar = 3
+def createCountGrid():
+    for x in master.arrayOfLabels:
+        x.grid(row=master.countVar, column=0)
+        master.countVar += 1
+    
+    
+    
+    
+
+def emojiClicked(emojiNum):
+    print('emoji was clicked with num: ' + str(emojiNum))
+    sio.emit('sendReaction', emojiNum)
+
+
+    
+
+l1 = Label(master, text="Create Room")
+l1.grid(row=0,column=0)
+
+e1 = Entry(master)
+e1.grid(row=0, column=1)
+
+b1 = Button(master, text="GO", command=clickedCreateRoom)
+b1.grid(row=0, column=2)
+
+l2 = Label(master, text="Join Room")
+l2.grid(row=1,column=0)
+
+e2 = Entry(master)
+e2.grid(row=1, column=1)
+
+b2 = Button(master, text="GO", command=clickedJoinRoom)
+b2.grid(row=1, column=2)
+
+
+
+#e1.grid(row=0, column=1)
+
+master.mainloop()
+
+
+
+
+
+#print("print works")
+
+
+#response = str(input("Do you want to join or create a room:"))
+#
+#if response == "create":
+#    createRoomName = str(input("enter in the room name:"))
+#    sio.emit('createRoom', createRoomName)
+#elif response == "join":
+#    createRoomName = str(input("enter in the room name:"))
+#    sio.emit('joinRoom', createRoomName)
+
+
+
+
+#sio.emit('message', {'foo': 'bar'})
+
